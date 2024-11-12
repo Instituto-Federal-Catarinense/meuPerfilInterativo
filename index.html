@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil Interativo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Adicionando transição suave para a imagem ao passar o mouse */
+        #profileImage {
+            transition: transform 0.3s;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -17,41 +23,155 @@
 
             <h5>Hobbies:</h5>
             <ul id="hobbiesList" class="list-group mb-3">
-                <li class="list-group-item">Leitura</li>
-                <li class="list-group-item">Esportes</li>
-                <li class="list-group-item">Música</li>
+                <li class="list-group-item" onclick="removerHobby(this)">Leitura</li>
+                <li class="list-group-item" onclick="removerHobby(this)">Esportes</li>
+                <li class="list-group-item" onclick="removerHobby(this)">Música</li>
             </ul>
 
             <button class="btn btn-primary me-2" onclick="alterarNome()">Alterar Nome</button>
+            <button class="btn btn-secondary me-2" onclick="alterarImagem()">Alterar Imagem</button>
+            <button class="btn btn-info me-2" onclick="alterarIdade()">Alterar Idade</button>
             <button class="btn btn-success me-2" onclick="adicionarHobby()">Adicionar Hobby</button>
             <button class="btn btn-warning me-2" onclick="mudarCorDeFundo()">Mudar Cor de Fundo</button>
+            <button class="btn btn-danger" onclick="resetarPerfil()">Resetar</button>
         </div>
     </div>
 </div>
 
 <script>
+    // Função para alterar o nome
     function alterarNome() {
         const novoNome = prompt("Digite o novo nome:");
         if (novoNome) {
             document.getElementById("profileName").textContent = "Nome: " + novoNome;
+            salvarPerfil();
         }
     }
 
+    // Função para alterar a imagem de perfil
+    function alterarImagem() {
+        const novaImagem = prompt("Digite a URL da nova imagem:");
+        if (novaImagem) {
+            document.getElementById("profileImage").src = novaImagem;
+            salvarPerfil();
+        }
+    }
+
+    // Função para alterar a idade
+    function alterarIdade() {
+        const novaIdade = prompt("Digite a nova idade:");
+        if (novaIdade) {
+            document.getElementById("profileAge").textContent = "Idade: " + novaIdade;
+            salvarPerfil();
+        }
+    }
+
+    // Função para adicionar um hobby
     function adicionarHobby() {
+        const hobbiesList = document.getElementById("hobbiesList");
+        if (hobbiesList.children.length >= 5) {
+            alert("Limite de 5 hobbies atingido.");
+            return;
+        }
+
         const novoHobby = prompt("Digite um novo hobby:");
         if (novoHobby) {
             const li = document.createElement("li");
             li.textContent = novoHobby;
             li.className = "list-group-item";
-            document.getElementById("hobbiesList").appendChild(li);
+            li.onclick = function() { removerHobby(li) }; // Adiciona a função para remover ao clicar
+            li.style.backgroundColor = gerarCorAleatoria(); // Define uma cor aleatória
+            hobbiesList.appendChild(li);
+            salvarPerfil();
         }
     }
 
-    function mudarCorDeFundo() {
-        const cores = ["#f8d7da", "#d1ecf1", "#d4edda", "#fff3cd", "#cce5ff"];
-        const corAleatoria = cores[Math.floor(Math.random() * cores.length)];
-        document.getElementById("profileCard").style.backgroundColor = corAleatoria;
+    // Função para remover um hobby ao clicar
+    function removerHobby(element) {
+        element.remove();
+        salvarPerfil();
     }
+
+    // Função para mudar a cor de fundo
+    function mudarCorDeFundo() {
+        const corAleatoria = gerarCorAleatoria();
+        document.getElementById("profileCard").style.backgroundColor = corAleatoria;
+        salvarPerfil();
+    }
+
+    // Função para gerar uma cor aleatória
+    function gerarCorAleatoria() {
+        const letras = "0123456789ABCDEF";
+        let cor = "#";
+        for (let i = 0; i < 6; i++) {
+            cor += letras[Math.floor(Math.random() * 16)];
+        }
+        return cor;
+    }
+
+    // Função para resetar o perfil para o estado inicial
+    function resetarPerfil() {
+        document.getElementById("profileName").textContent = "Nome: Meu Perfil";
+        document.getElementById("profileImage").src = "https://via.placeholder.com/150";
+        document.getElementById("profileAge").textContent = "Idade: 18";
+        document.getElementById("profileCard").style.backgroundColor = "#fff";
+        const hobbiesList = document.getElementById("hobbiesList");
+        hobbiesList.innerHTML = '';
+        ["Leitura", "Esportes", "Música"].forEach(hobby => {
+            const li = document.createElement("li");
+            li.textContent = hobby;
+            li.className = "list-group-item";
+            li.onclick = function() { removerHobby(li) };
+            hobbiesList.appendChild(li);
+        });
+        localStorage.clear();
+    }
+
+    // Função para salvar o estado atual do perfil no localStorage
+    function salvarPerfil() {
+        const perfil = {
+            nome: document.getElementById("profileName").textContent,
+            imagem: document.getElementById("profileImage").src,
+            idade: document.getElementById("profileAge").textContent,
+            corDeFundo: document.getElementById("profileCard").style.backgroundColor,
+            hobbies: Array.from(document.getElementById("hobbiesList").children).map(li => li.textContent)
+        };
+        localStorage.setItem("perfil", JSON.stringify(perfil));
+    }
+
+    // Função para carregar o perfil salvo no localStorage
+    function carregarPerfil() {
+        const perfilSalvo = localStorage.getItem("perfil");
+        if (perfilSalvo) {
+            const perfil = JSON.parse(perfilSalvo);
+            document.getElementById("profileName").textContent = perfil.nome;
+            document.getElementById("profileImage").src = perfil.imagem;
+            document.getElementById("profileAge").textContent = perfil.idade;
+            document.getElementById("profileCard").style.backgroundColor = perfil.corDeFundo;
+
+            const hobbiesList = document.getElementById("hobbiesList");
+            hobbiesList.innerHTML = '';
+            perfil.hobbies.forEach(hobby => {
+                const li = document.createElement("li");
+                li.textContent = hobby;
+                li.className = "list-group-item";
+                li.onclick = function() { removerHobby(li) };
+                li.style.backgroundColor = gerarCorAleatoria();
+                hobbiesList.appendChild(li);
+            });
+        }
+    }
+
+    // Adiciona evento para animar a imagem ao passar o mouse
+    document.getElementById("profileImage").addEventListener("mouseover", () => {
+        document.getElementById("profileImage").style.transform = "scale(1.1)";
+    });
+    document.getElementById("profileImage").addEventListener("mouseout", () => {
+        document.getElementById("profileImage").style.transform = "scale(1)";
+    });
+
+    // Carrega o perfil salvo ao iniciar a página
+    carregarPerfil();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
